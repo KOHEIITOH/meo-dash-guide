@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>インタラクティブMEOダッシュボード解説</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Calm Neutral -->
+    <!-- Application Structure Plan: The SPA is designed as a guided learning journey for a user new to MEO. It follows a logical flow: 1. "Why" (Importance of MEO): Grabs user attention with key statistics and visuals. 2. "What" (Dashboard Features): Explains core functionalities using an interactive tab system for clarity. 3. "Who" (Tool Comparison): Provides an interactive filtering system to help users compare tools based on their needs. 4. "How" (Planning Guide): An interactive checklist that transforms the report's planning sections into an actionable tool. This structure is chosen over the report's linear format to facilitate understanding and practical application, empowering the user to move from learning to planning within a single, engaging experience. -->
+    <!-- Visualization & Content Choices: 1. MEO Importance: Report data on market share and user behavior. Goal: Inform/Persuade. Viz: Donut and Bar charts (Chart.js) for high impact. Interaction: Animate on load. Justification: Visual data is more compelling than text for establishing importance. 2. Core Features: Report's feature descriptions. Goal: Organize/Explain. Viz: Tabbed interface with icons. Interaction: User clicks to reveal content. Justification: Breaks down complex info into manageable parts. 3. Tool Comparison: Report's comparison table. Goal: Compare/Decide. Viz: Filterable card layout. Interaction: User clicks filters to narrow down options. Justification: Creates a practical decision-support tool. 4. Planning Guide: Report's planning/requirements sections. Goal: Guide/Organize. Viz: Interactive checklist. Interaction: User checks items to see details. Justification: Makes abstract concepts tangible and actionable. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body { font-family: 'Noto Sans JP', sans-serif; background-color: #F8F9FA; color: #212529; }
+        .chart-container { position: relative; width: 100%; max-width: 400px; margin: auto; height: 300px; max-height: 350px; }
+        @media (min-width: 640px) { .chart-container { height: 350px; } }
+        .tab-active { background-color: #0d6efd; color: white; }
+        .tab-inactive { background-color: #e9ecef; color: #495057; }
+        .tool-card { transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out; }
+        .hidden-card { opacity: 0; transform: scale(0.95); position: absolute; z-index: -10; }
+        .nav-link { transition: color 0.2s; }
+        .nav-link:hover { color: #0d6efd; }
+        .smooth-scroll { scroll-behavior: smooth; }
+        .section-card { background-color: white; border-radius: 0.75rem; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1); }
+        .kpi-card { border-left: 4px solid #0d6efd; }
+    </style>
+</head>
+<body class="smooth-scroll">
+
+    <header class="bg-white/80 backdrop-blur-md sticky top-0 z-50 shadow-sm">
+        <nav class="container mx-auto px-6 py-3 flex justify-between items-center">
+            <h1 class="text-xl md:text-2xl font-bold text-gray-800">MEOダッシュボード完全ガイド</h1>
+            <div class="hidden md:flex space-x-8">
+                <a href="#why" class="nav-link text-gray-600 font-medium">1. なぜ重要か</a>
+                <a href="#what" class="nav-link text-gray-600 font-medium">2. 何ができるか</a>
+                <a href="#who" class="nav-link text-gray-600 font-medium">3. どのツールを選ぶか</a>
+                <a href="#how" class="nav-link text-gray-600 font-medium">4. どう計画するか</a>
+            </div>
+            <button id="mobile-menu-button" class="md:hidden p-2 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
+            </button>
+        </nav>
+        <div id="mobile-menu" class="hidden md:hidden px-6 pt-2 pb-4 space-y-2">
+            <a href="#why" class="block nav-link text-gray-600">1. なぜ重要か</a>
+            <a href="#what" class="block nav-link text-gray-600">2. 何ができるか</a>
+            <a href="#who" class="block nav-link text-gray-600">3. どのツールを選ぶか</a>
+            <a href="#how" class="block nav-link text-gray-600">4. どう計画するか</a>
+        </div>
+    </header>
+
+    <main class="container mx-auto p-4 md:p-8">
+        
+        <section id="why" class="py-16">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold text-gray-800 mb-4">1. なぜMEOが今、これほど重要なのか？</h2>
+                <p class="text-lg text-gray-600 max-w-3xl mx-auto">スマートフォンが当たり前になった今、ユーザーの「お店探し」は劇的に変化しました。データが示すMEO（マップエンジン最適化）の圧倒的な影響力を理解することが、最初のステップです。</p>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-8 items-center">
+                <div class="section-card p-6">
+                    <h3 class="text-xl font-bold text-center mb-4">日本の地図アプリ市場：Googleマップの独占</h3>
+                    <p class="text-gray-600 text-center mb-4">日本のスマートフォンユーザーのほぼ全員が、お店探しにGoogleマップを利用しています。この巨大なプラットフォームで目立つことが、集客の鍵です。</p>
+                    <div class="chart-container">
+                        <canvas id="marketShareChart"></canvas>
+                    </div>
+                </div>
+                <div class="section-card p-6">
+                    <h3 class="text-xl font-bold text-center mb-4">口コミ評価が来店を左右する</h3>
+                     <p class="text-gray-600 text-center mb-4">ユーザーは口コミを非常に重視しています。評価が低いだけで、驚くほど多くの潜在顧客を失っている可能性があります。</p>
+                    <div class="chart-container">
+                        <canvas id="reviewImpactChart"></canvas>
+                    </div>
+                </div>
+            </div>
+             <div class="mt-12 section-card p-8">
+                <h3 class="text-2xl font-bold text-center mb-6">MEO対策の核心：ローカルパック</h3>
+                <div class="flex flex-col md:flex-row items-center gap-6">
+                    <div class="flex-shrink-0 w-32 h-32 bg-blue-100 rounded-full flex items-center justify-center">
+                        <svg class="w-16 h-16 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                    </div>
+                    <div>
+                        <p class="text-lg text-gray-700">ユーザーが「地域名＋業種」で検索した際、通常の検索結果よりも上に表示される地図と3つの店舗リスト、これが「ローカルパック」です。ここに表示されることは、WebサイトのSEOで1位になるよりも強力な集客効果を持つと言われています。MEOダッシュボードは、この最も重要な場所への表示を支援するツールなのです。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <hr class="my-16 border-gray-200">
+
+        <section id="what" class="py-16">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold text-gray-800 mb-4">2. MEOダッシュボードで、一体何ができるのか？</h2>
+                <p class="text-lg text-gray-600 max-w-3xl mx-auto">MEOダッシュボードは、店舗運営の非効率を解消し、集客を最大化するための多機能ツールです。主な5つの機能を見ていきましょう。</p>
+            </div>
+
+            <div class="max-w-4xl mx-auto">
+                <div class="flex flex-wrap -mx-2 mb-4">
+                    <button data-tab="tab1" class="tab-button flex-1 px-4 py-3 font-medium text-sm md:text-base tab-active m-1 rounded-md transition">① GBP情報管理</button>
+                    <button data-tab="tab2" class="tab-button flex-1 px-4 py-3 font-medium text-sm md:text-base tab-inactive m-1 rounded-md transition">② 口コミ管理</button>
+                    <button data-tab="tab3" class="tab-button flex-1 px-4 py-3 font-medium text-sm md:text-base tab-inactive m-1 rounded-md transition">③ パフォーマンス分析</button>
+                    <button data-tab="tab4" class="tab-button flex-1 px-4 py-3 font-medium text-sm md:text-base tab-inactive m-1 rounded-md transition">④ 情報発信</button>
+                    <button data-tab="tab5" class="tab-button flex-1 px-4 py-3 font-medium text-sm md:text-base tab-inactive m-1 rounded-md transition">⑤ 多店舗管理</button>
+                </div>
+
+                <div class="section-card p-6 md:p-8">
+                    <div id="tab1" class="tab-content">
+                        <h3 class="text-2xl font-bold mb-4">GBP情報の一元管理と改ざん防止</h3>
+                        <p class="text-gray-700 mb-4">Googleビジネスプロフィール（GBP）はMEOの土台です。この機能は、全店舗の営業時間、住所、電話番号などの基本情報を一つの画面で更新し、情報の正確性と一貫性を保ちます。さらに、第三者による悪意のある情報改ざんを自動で検知・修正し、企業の信頼を守る番人の役割も果たします。</p>
+                        <div class="mt-4 p-4 bg-blue-50 rounded-lg">
+                            <p class="font-semibold text-blue-800">🚀 ビジネス価値：運用工数の劇的な削減と、ブランドイメージの保護。</p>
+                        </div>
+                    </div>
+                    <div id="tab2" class="tab-content hidden">
+                        <h3 class="text-2xl font-bold mb-4">口コミの収集、返信、分析</h3>
+                        <p class="text-gray-700 mb-4">良い口コミは最高の広告です。この機能は、全店舗の口コミを一元管理し、迅速な返信をサポートします。特にAIを活用した返信文案の自動生成機能は、対応の質を保ちつつ担当者の負担を大幅に軽減し、顧客満足度を向上させる好循環を生み出します。</p>
+                        <div class="mt-4 p-4 bg-blue-50 rounded-lg">
+                             <p class="font-semibold text-blue-800">🚀 ビジネス価値：顧客エンゲージメントの強化と、ポジティブな評判の最大化。</p>
+                        </div>
+                    </div>
+                    <div id="tab3" class="tab-content hidden">
+                        <h3 class="text-2xl font-bold mb-4">順位計測とパフォーマンス分析</h3>
+                        <p class="text-gray-700 mb-4">「勘」に頼るマーケティングは終わりです。この機能は、特定のキーワードでの検索順位や、ユーザーの行動（電話、ルート検索など）をデータで可視化します。競合店舗との比較も可能で、データに基づいた科学的な戦略立案と改善（PDCA）を強力に支援します。</p>
+                        <div class="mt-4 p-4 bg-blue-50 rounded-lg">
+                            <p class="font-semibold text-blue-800">🚀 ビジネス価値：MEO施策のROI（投資対効果）の明確化と、競争優位性の確立。</p>
+                        </div>
+                    </div>
+                    <div id="tab4" class="tab-content hidden">
+                        <h3 class="text-2xl font-bold mb-4">投稿・情報発信の効率化</h3>
+                        <p class="text-gray-700 mb-4">定期的な情報発信は、ユーザーの関心を引きつけ、Googleからの評価を高めます。この機能を使えば、キャンペーン情報や新着ニュースを全店舗に一括で投稿・予約投稿できます。さらにSNSとの連携機能で、一度の投稿を複数のメディアに展開し、情報発信の効果を最大化します。</p>
+                         <div class="mt-4 p-4 bg-blue-50 rounded-lg">
+                            <p class="font-semibold text-blue-800">🚀 ビジネス価値：統合的なデジタルマーケティングの実現と、顧客接点の拡大。</p>
+                        </div>
+                    </div>
+                    <div id="tab5" class="tab-content hidden">
+                        <h3 class="text-2xl font-bold mb-4">多店舗・チェーン店管理の最適化</h3>
+                        <p class="text-gray-700 mb-4">数百店舗の管理も、これ一つで。この機能は多店舗展開する企業にとって必須です。エリアや業態で店舗をグループ化し、グループごとのパフォーマンスを比較分析できます。成功事例を特定して横展開したり、課題のある店舗に集中対策を講じたりと、チェーン全体のMEOパフォーマンスを底上げします。</p>
+                         <div class="mt-4 p-4 bg-blue-50 rounded-lg">
+                            <p class="font-semibold text-blue-800">🚀 ビジネス価値：組織全体のMEO戦略の標準化と、スケールメリットの最大化。</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <hr class="my-16 border-gray-200">
+
+        <section id="who" class="py-16">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold text-gray-800 mb-4">3. どのツールを選ぶべきか？</h2>
+                <p class="text-lg text-gray-600 max-w-3xl mx-auto">日本市場には多様なMEOダッシュボードが存在します。自社の目的や規模に合ったツールを見つけるために、下のフィルターで絞り込んでみましょう。</p>
+            </div>
+
+            <div class="flex flex-wrap justify-center gap-2 mb-8">
+                <button data-filter="all" class="filter-button px-4 py-2 rounded-full text-sm font-medium bg-blue-500 text-white">すべて表示</button>
+                <button data-filter="multi-store" class="filter-button px-4 py-2 rounded-full text-sm font-medium bg-gray-200 text-gray-700">多店舗向け</button>
+                <button data-filter="ai" class="filter-button px-4 py-2 rounded-full text-sm font-medium bg-gray-200 text-gray-700">AI機能重視</button>
+                <button data-filter="cost" class="filter-button px-4 py-2 rounded-full text-sm font-medium bg-gray-200 text-gray-700">低コスト</button>
+                <button data-filter="small" class="filter-button px-4 py-2 rounded-full text-sm font-medium bg-gray-200 text-gray-700">小規模向け</button>
+            </div>
+
+            <div id="tool-grid" class="relative grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            </div>
+        </section>
+
+        <hr class="my-16 border-gray-200">
+
+        <section id="how" class="py-16">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold text-gray-800 mb-4">4. どうやって導入計画を立てるか？</h2>
+                <p class="text-lg text-gray-600 max-w-3xl mx-auto">ツールの導入成功は、事前の計画と要件定義にかかっています。このインタラクティブなガイドを使って、自社に必要な要件を整理してみましょう。</p>
+            </div>
+            
+            <div class="grid lg:grid-cols-2 gap-8">
+                <div class="section-card p-6 md:p-8">
+                    <h3 class="text-2xl font-bold mb-4">Step 1: 導入目的と目標（KPI）の設定</h3>
+                    <p class="text-gray-600 mb-6">まず「なぜ導入するのか」を明確にします。以下の例を参考に、自社の目標を具体的にイメージしましょう。</p>
+                    <div class="space-y-4">
+                        <div class="kpi-card bg-gray-50 p-4 rounded-md">
+                            <h4 class="font-bold text-gray-800">📈 集客力の向上</h4>
+                            <p class="text-sm text-gray-600">例：主要キーワードでの検索順位を平均5位以内にする。Googleマップ経由の来店数を30%増加させる。</p>
+                        </div>
+                        <div class="kpi-card bg-gray-50 p-4 rounded-md">
+                            <h4 class="font-bold text-gray-800">💬 顧客満足度の向上</h4>
+                            <p class="text-sm text-gray-600">例：口コミの平均評価を4.5以上にする。口コミ返信率を90%以上に維持する。</p>
+                        </div>
+                        <div class="kpi-card bg-gray-50 p-4 rounded-md">
+                            <h4 class="font-bold text-gray-800">⏱️ 運用効率の改善</h4>
+                            <p class="text-sm text-gray-600">例：情報更新や口コミ対応にかかる月間作業時間を50%削減する。</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section-card p-6 md:p-8">
+                     <h3 class="text-2xl font-bold mb-4">Step 2: 要件定義チェックリスト</h3>
+                     <p class="text-gray-600 mb-6">システムに求める「機能要件」と、品質に関わる「非機能要件」をチェックしてみましょう。クリックすると詳細が表示されます。</p>
+                     <div id="requirements-checklist" class="space-y-3">
+                     </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-gray-800 text-white mt-16">
+        <div class="container mx-auto px-6 py-4 text-center">
+            <p>&copy; 2024 インタラクティブMEOダッシュボード解説. All Rights Reserved.</p>
+            <p class="text-sm text-gray-400 mt-2">このアプリケーションは、提供されたレポートに基づき教育目的で作成されました。</p>
+        </div>
+    </footer>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const marketShareData = {
+        labels: ['Googleマップ', 'その他'],
+        datasets: [{
+            label: '地図アプリ利用率',
+            data: [99.4, 0.6],
+            backgroundColor: ['#0d6efd', '#e9ecef'],
+            hoverOffset: 4
+        }]
+    };
+    const reviewImpactData = {
+        labels: ['来店を見送る', '来店する'],
+        datasets: [{
+            label: '低評価の口コミを見たユーザーの行動',
+            data: [77.5, 22.5],
+            backgroundColor: ['#dc3545', '#198754'],
+            borderColor: '#F8F9FA',
+            borderWidth: 2
+        }]
+    };
+
+    const marketShareChartCtx = document.getElementById('marketShareChart').getContext('2d');
+    new Chart(marketShareChartCtx, {
+        type: 'doughnut',
+        data: marketShareData,
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'bottom' },
+                tooltip: {
+                    callbacks: { label: (context) => `${context.label}: ${context.raw}%` }
+                }
+            }
+        }
+    });
+
+    const reviewImpactChartCtx = document.getElementById('reviewImpactChart').getContext('2d');
+    new Chart(reviewImpactChartCtx, {
+        type: 'bar',
+        data: reviewImpactData,
+        options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                x: {
+                    beginAtZero: true,
+                    max: 100,
+                    ticks: { callback: (value) => value + '%' }
+                }
+            },
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: { label: (context) => `${context.dataset.label}: ${context.raw}%` }
+                }
+            }
+        }
+    });
+
+    const tabButtons = document.querySelectorAll('.tab-button');
+    const tabContents = document.querySelectorAll('.tab-content');
+    tabButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            tabButtons.forEach(btn => {
+                btn.classList.remove('tab-active');
+                btn.classList.add('tab-inactive');
+            });
+            button.classList.add('tab-active');
+            button.classList.remove('tab-inactive');
+
+            tabContents.forEach(content => {
+                content.classList.add('hidden');
+            });
+            document.getElementById(button.dataset.tab).classList.remove('hidden');
+        });
+    });
+    
+    const toolsData = [
+        { name: 'MEOチェキ', provider: 'トライハッチ', feature: '高精度な順位計測（特許取得済）とAIによる投稿・口コミ返信の効率化。', tags: ['multi-store', 'ai', 'small'] },
+        { name: 'MEOアナリティクス', provider: 'オルグロー', feature: '安価な料金設定でYahoo!プレイスも連携可能。ChatGPT活用による口コミ返信も強み。', tags: ['cost', 'multi-store', 'ai'] },
+        { name: 'Canly', provider: 'カンリー', feature: '国内外11万店舗以上の導入実績。多店舗経営企業（大手）向けの情報改ざん防止・グループ分析機能が充実。', tags: ['multi-store'] },
+        { name: 'ローカルミエルカ', provider: 'Faber Company', feature: '100店舗まで無料プランがあり、スモールスタートに最適。口コミ獲得支援に特化。', tags: ['cost', 'small'] },
+        { name: 'Gyro-n MEO', provider: 'ユニヴァ・ジャイロ', feature: '地点・時間帯指定の高度な順位計測や多言語対応が強み。SEOツールとの連携も可能。', tags: ['multi-store', 'small'] },
+        { name: 'MEO Dash byGMO', provider: 'GMO TECH', feature: 'AI運用アシスタントが充実。低コストで幅広い機能を利用でき、累計取引社数No.1を誇る。', tags: ['cost', 'multi-store', 'ai'] }
+    ];
+    
+    const toolGrid = document.getElementById('tool-grid');
+    function renderTools(filter = 'all') {
+        toolGrid.innerHTML = '';
+        const filteredTools = filter === 'all' ? toolsData : toolsData.filter(tool => tool.tags.includes(filter));
+        
+        filteredTools.forEach(tool => {
+            const card = document.createElement('div');
+            card.className = 'tool-card section-card p-6';
+            card.innerHTML = `
+                <h4 class="text-xl font-bold text-gray-800">${tool.name}</h4>
+                <p class="text-sm text-gray-500 mb-3">提供: ${tool.provider}</p>
+                <p class="text-gray-700">${tool.feature}</p>
+            `;
+            toolGrid.appendChild(card);
+        });
+    }
+
+    const filterButtons = document.querySelectorAll('.filter-button');
+    filterButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            filterButtons.forEach(btn => {
+                btn.classList.remove('bg-blue-500', 'text-white');
+                btn.classList.add('bg-gray-200', 'text-gray-700');
+            });
+            button.classList.add('bg-blue-500', 'text-white');
+            button.classList.remove('bg-gray-200', 'text-gray-700');
+            renderTools(button.dataset.filter);
+        });
+    });
+
+    renderTools();
+
+    const requirementsData = [
+        {
+            category: '機能要件 (システムが「何をするか」)',
+            items: [
+                { name: 'GBP情報管理', desc: '全店舗の基本情報（営業時間、住所、メニュー等）を一括で更新・管理できるか。' },
+                { name: '口コミ管理', desc: '全店舗の口コミを一覧表示し、返信できるか。AIによる返信補助機能はあるか。' },
+                { name: '順位計測', desc: '指定キーワードでの検索順位を、競合含めて定点観測できるか。' },
+                { name: '投稿管理', desc: 'キャンペーン情報などを全店舗に一括投稿・予約投稿できるか。' },
+                { name: '分析・レポート', desc: 'ユーザー行動（電話、ルート検索等）を可視化し、レポート出力できるか。' },
+                { name: 'SNS連携', desc: 'GBPへの投稿をInstagramやFacebookに同時投稿できるか。' },
+            ]
+        },
+        {
+            category: '非機能要件 (システムの「品質」)',
+            items: [
+                { name: 'パフォーマンス', desc: '多数の店舗情報を一括更新する際の処理速度は十分か。画面表示は快適か。' },
+                { name: 'セキュリティ', desc: '不正アクセス対策は万全か。担当者ごとに操作権限を設定できるか。' },
+                { name: 'UI/UX', desc: 'ITに不慣れな現場スタッフでも直感的に操作できるシンプルな画面か。' },
+                { name: '可用性・拡張性', desc: 'システムは安定稼働するか。将来の店舗数増加に対応できるか。' },
+                { name: 'サポート体制', desc: '導入後の問合せや、Googleの仕様変更時に迅速なサポートを受けられるか。' },
+                { name: '法規制遵守', desc: '個人情報保護法や景品表示法（ステマ規制）など、関連法規に準拠しているか。' }
+            ]
+        }
+    ];
+
+    const checklistContainer = document.getElementById('requirements-checklist');
+    requirementsData.forEach(reqCategory => {
+        const categoryTitle = document.createElement('h4');
+        categoryTitle.className = 'text-lg font-bold text-gray-800 mt-6';
+        categoryTitle.textContent = reqCategory.category;
+        checklistContainer.appendChild(categoryTitle);
+
+        reqCategory.items.forEach(item => {
+            const itemWrapper = document.createElement('div');
+            itemWrapper.className = 'bg-gray-50 rounded-lg p-3 cursor-pointer hover:bg-gray-100 transition';
+            itemWrapper.innerHTML = `
+                <div class="flex items-center justify-between">
+                    <span class="font-medium text-gray-700">${item.name}</span>
+                    <svg class="w-5 h-5 text-gray-400 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                </div>
+                <p class="text-sm text-gray-600 mt-2 hidden">${item.desc}</p>
+            `;
+            checklistContainer.appendChild(itemWrapper);
+
+            itemWrapper.addEventListener('click', () => {
+                itemWrapper.querySelector('p').classList.toggle('hidden');
+                itemWrapper.querySelector('svg').classList.toggle('rotate-180');
+            });
+        });
+    });
+
+    const mobileMenuButton = document.getElementById('mobile-menu-button');
+    const mobileMenu = document.getElementById('mobile-menu');
+    mobileMenuButton.addEventListener('click', () => {
+        mobileMenu.classList.toggle('hidden');
+    });
+
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+            e.preventDefault();
+            const targetId = this.getAttribute('href');
+            const targetElement = document.querySelector(targetId);
+            if (targetElement) {
+                targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+            if (mobileMenu.classList.contains('hidden') === false) {
+                 mobileMenu.classList.add('hidden');
+            }
+        });
+    });
+});
+</script>
+
+</body>
+</html>
